@@ -1,5 +1,87 @@
 <!DOCTYPE html>
-<meta charset="UTF-8">
+<html lang="en">
 <head>
-  
+  <meta charset="UTF-8">
+  <title>Library QR Book System</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
+<body>
+  <h2>Scan Book QR Code</h2>
+  <div id="qr-reader" style="width:300px"></div>
+  <div id="result"></div>
+  <button id="checkout" style="display:none;">Check Out</button>
+  <button id="return" style="display:none;">Return</button>
+
+  <script>
+    // CONFIGURE THESE!
+    const SHEET_CSV_URL = 'PASTE_PUBLISHED_CSV_URL_HERE';
+    const APPS_SCRIPT_API = 'PASTE_YOUR_APPS_SCRIPT_DEPLOYMENT_URL_HERE';
+
+    let currentBook = null;
+    let books = {};
+
+    // Load Google Sheet data as CSV
+    function loadBooks() {
+      fetch(SHEET_CSV_URL)
+        .then(r => r.text())
+        .then(csv => {
+          Papa.parse(csv, {
+            header: true,
+            complete: function(results) {
+              books = {};
+              results.data.forEach(row => {
+                books[row['Book ID']] = row;
+              });
+            }
+          });
+        });
+    }
+
+    function showActions(status) {
+      document.getElementById('checkout').style.display = status === 'ready' ? '' : 'none';
+      document.getElementById('return').style.display = status === 'checked_out' ? '' : 'none';
+    }
+
+    function onScanSuccess(decodedText) {
+      currentBook = decodedText.trim();
+      if (books[currentBook]) {
+        let b = books[currentBook];
+        document.getElementById('result').innerText = 
+          `Title: ${b.Title}\nStatus: ${b.Status}\nBorrower: ${b.Borrower}`;
+        showActions(b.Status);
+      } else {
+        document.getElementById('result').innerText = 'Book not found!';
+        showActions('');
+      }
+    }
+
+    // QR setup
+    var scanner = new Html5QrcodeScanner('qr-reader', { fps: 10, qrbox: 250 });
+    scanner.render(onScanSuccess);
+
+    // Button Actions
+    document.getElementById('checkout').onclick = function() {
+      let borrower = prompt("Enter borrower's name:");
+      if (!borrower) return;
+      fetch(`${APPS_SCRIPT_API}?bookid=${encodeURIComponent(currentBook)}&status=checked_out&borrower=${encodeURIComponent(borrower)}`)
+        .then(r => r.text())
+        .then(res => {
+          alert("Checked out!");
+          loadBooks();
+        });
+    };
+
+    document.getElementById('return').onclick = function() {
+      fetch(`${APPS_SCRIPT_API}?bookid=${encodeURIComponent(currentBook)}&status=ready&borrower=`)
+        .then(r => r.text())
+        .then(res => {
+          alert("Returned!");
+          loadBooks();
+        });
+    };
+
+    loadBooks();
+  </script>
+</body>
+</html>
