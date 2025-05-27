@@ -56,8 +56,13 @@
             complete: function(results) {
               books = {};
               results.data.forEach(row => {
-                books[row['Book ID']] = row;
+                // Convert Book ID to string and trim whitespace
+                if (row['Book ID']) {
+                  books[String(row['Book ID']).trim()] = row;
+                }
               });
+              // Debug: show loaded Book IDs
+              console.log("Loaded Book IDs:", Object.keys(books));
             }
           });
         });
@@ -69,7 +74,9 @@
     }
 
     function onScanSuccess(decodedText) {
-      currentBook = decodedText.trim();
+      currentBook = String(decodedText).trim();
+      // Debug: show scanned value
+      console.log("Scanned Book ID:", currentBook);
       if (books[currentBook]) {
         let b = books[currentBook];
         document.getElementById('result').innerText =
@@ -78,6 +85,8 @@
       } else {
         document.getElementById('result').innerText = 'Book not found!';
         showActions('');
+        // Debug: Show all available Book IDs
+        console.log("Book not found. Available Book IDs:", Object.keys(books));
       }
     }
 
