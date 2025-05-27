@@ -46,6 +46,13 @@
     let currentBook = null;
     let books = {};
 
+    // Normalize Book ID to avoid issues with numbers, strings, decimals, etc.
+    function normalizeBookId(id) {
+      // Remove whitespace, force string, remove leading/trailing zeros if needed
+      // You may adjust this function based on your Book ID format
+      return String(id).trim();
+    }
+
     // Load Google Sheet data as CSV
     function loadBooks() {
       fetch(SHEET_CSV_URL)
@@ -56,9 +63,9 @@
             complete: function(results) {
               books = {};
               results.data.forEach(row => {
-                // Convert Book ID to string and trim whitespace
                 if (row['Book ID']) {
-                  books[String(row['Book ID']).trim()] = row;
+                  const normalizedID = normalizeBookId(row['Book ID']);
+                  books[normalizedID] = row;
                 }
               });
               // Debug: show loaded Book IDs
@@ -74,8 +81,7 @@
     }
 
     function onScanSuccess(decodedText) {
-      currentBook = String(decodedText).trim();
-      // Debug: show scanned value
+      currentBook = normalizeBookId(decodedText);
       console.log("Scanned Book ID:", currentBook);
       if (books[currentBook]) {
         let b = books[currentBook];
@@ -85,7 +91,6 @@
       } else {
         document.getElementById('result').innerText = 'Book not found!';
         showActions('');
-        // Debug: Show all available Book IDs
         console.log("Book not found. Available Book IDs:", Object.keys(books));
       }
     }
