@@ -5,10 +5,35 @@
   <title>Library QR Book System</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #f9f9f9;
+    }
+    #qr-reader {
+      width: 400px !important;
+      height: 400px !important;
+      margin: 20px auto;
+    }
+    #result {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+    }
+    button {
+      margin: 0.5rem;
+      padding: 0.5rem 1.5rem;
+      font-size: 1.1rem;
+    }
+  </style>
 </head>
 <body>
   <h2>Scan Book QR Code</h2>
-  <div id="qr-reader" style="width:300px"></div>
+  <div id="qr-reader"></div>
   <div id="result"></div>
   <button id="checkout" style="display:none;">Check Out</button>
   <button id="return" style="display:none;">Return</button>
@@ -47,7 +72,7 @@
       currentBook = decodedText.trim();
       if (books[currentBook]) {
         let b = books[currentBook];
-        document.getElementById('result').innerText = 
+        document.getElementById('result').innerText =
           `Title: ${b.Title}\nStatus: ${b.Status}\nBorrower: ${b.Borrower}`;
         showActions(b.Status);
       } else {
@@ -56,8 +81,8 @@
       }
     }
 
-    // QR setup
-    var scanner = new Html5QrcodeScanner('qr-reader', { fps: 10, qrbox: 250 });
+    // QR setup (make the box bigger)
+    var scanner = new Html5QrcodeScanner('qr-reader', { fps: 10, qrbox: 350 });
     scanner.render(onScanSuccess);
 
     // Button Actions
